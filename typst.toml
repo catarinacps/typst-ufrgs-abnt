@@ -1,0 +1,14 @@
+[package]
+name = "typst-abnt"
+version = "0.1.0"
+compiler = "0.11.0"
+entrypoint = "abnt.typ"
+repository = "https://github.com/catarinacps/typst-abnt"
+authors = ["Catarina Silva"]
+license = "MIT"
+description = "A template document aiming to implement ABNT specifications."
+
+[template]
+path = "template"
+entrypoint = "main.typ"
+
