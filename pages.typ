@@ -1,4 +1,4 @@
-#import "@preview/glossarium:0.3.0": print-glossary
+#import "@preview/glossarium:0.5.4": print-glossary
 #import "presets.typ": bachelors
 
 #let blank-page() = page(align(center + bottom)[_Page intentionally left blank._])
@@ -45,7 +45,7 @@
     #(institution.nominata + course.nominata).map(it => it.join([: ])).join(linebreak())
 ])
 
-#let abstract-page(abstract, keywords) = [
+#let abstract-page(abstract, keywords) = page[
     = Abstract
 
     #par(first-line-indent: 3em, leading: 0.75em, [#abstract])
@@ -55,7 +55,7 @@
     *Keywords:* #keywords.join("; ")\.
 ]
 
-#let glossary-page(terms) = [
+#let glossary-page(terms) = page[
     = Glossary
 
     #set strong(delta: 0)

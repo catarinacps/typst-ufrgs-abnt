@@ -1,4 +1,4 @@
-#import "@preview/glossarium:0.3.0": make-glossary, gls, glspl
+#import "@preview/glossarium:0.5.4": make-glossary, gls, glspl, register-glossary
 #import "@preview/i-figured:0.2.4"
 #import "pages.typ": *
 #import "presets.typ" as presets: *
@@ -86,6 +86,7 @@
     body,
 ) = {
     show: make-glossary
+    register-glossary(glossary)
 
     set document(title: title, author: author.first-name)
 
@@ -113,7 +114,7 @@
 
     show heading: set text(size: 12pt, weight: "regular")
 
-    show heading.where(level: 1): it => pagebreak(weak: true) + it
+    
 
     show heading: it => if it.level < 4 {
         v(3em, weak: true)
@@ -128,12 +129,11 @@
 
     show heading.where(numbering: none): it => align(center + top, it)
 
-    set outline(indent: false)
+    set outline(indent: 0em)
 
     set heading(numbering: none, outlined: false, bookmarked: true)
 
-    show par: set block(spacing: 0.25em)
-    set par(justify: true, leading: 0.25em)
+    set par(justify: true, leading: 0.25em, spacing: 0.25em)
 
     {
         show heading: it => { it; par(box()); v(-0.25em) }
@@ -149,9 +149,9 @@
         show outline.entry: set text(top-edge: "cap-height", bottom-edge: "baseline")
         show outline: set par(leading: 0.65em)
 
-        i-figured.outline(target-kind: image, title: [Index of Figures])
-        i-figured.outline(target-kind: table, title: [Index of Tables])
-        i-figured.outline(target-kind: raw, title: [Index of Listings])
+        page(i-figured.outline(target-kind: image, title: [Index of Figures]))
+        page(i-figured.outline(target-kind: table, title: [Index of Tables]))
+        page(i-figured.outline(target-kind: raw, title: [Index of Listings]))
 
         glossary-page(glossary)
 
@@ -163,10 +163,10 @@
         outline(title: toc-title)
     }
 
+    show heading.where(level: 1): it => pagebreak(weak: true) + it
     show heading: it => { it; par(box()); v(-0.75em) }
 
-    show par: set block(spacing: 0.75em)
-    set par(first-line-indent: 3em, leading: 0.75em)
+    set par(first-line-indent: 3em, leading: 0.75em, spacing: 0.75em)
 
     show heading: i-figured.reset-counters
     show std-figure: i-figured.show-figure
@@ -183,8 +183,8 @@
     show std-figure.caption: set text(size: 10pt)
 
     show std-figure.caption.where(position: bottom): it => [
-    #v(0.1em)
-    #it.supplement: #it.body
+        #v(0.1em)
+        #it.supplement: #it.body
     ]
 
     set enum(
