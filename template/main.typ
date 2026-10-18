@@ -1,4 +1,4 @@
-#import "@preview/typst-abnt:0.1.0": abnt, presets
+#import "../abnt.typ": *
 #import presets: ufrgs
 
 #show: abnt.with(
@@ -9,7 +9,7 @@
         (key: "abnt", short: "ABNT", long: "Associação Brasileira de Normas Técnicas"),
         (key: "sbc", short: "SBC", long: "Sociedade Brasileira de Computação")
     ),
-    references: "refs.bib"
+    references: path("refs.bib")
 )
 
 = Hey
