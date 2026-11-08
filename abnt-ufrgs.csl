@@ -73,12 +73,23 @@
       <term name="elocation" form="short">local.</term>
       <term name="no-place" form="short">s. l.</term>
       <term name="no date" form="short">s. d.</term>
+      <!-- intervalos de páginas com hífen, como nos exemplos da ABNT NBR 6023:2018 (p. 16-29) -->
+      <term name="page-range-delimiter">-</term>
+    </terms>
+  </locale>
+  <locale xml:lang="en">
+    <!-- Em textos em inglês, as expressões latinas da ABNT permanecem em latim -->
+    <terms>
+      <term name="no-place" form="short">s. l.</term>
+      <!-- "at" é usado apenas em "Accessed on:" (equivalente a "Acesso em:") -->
+      <term name="at">on</term>
+      <term name="page-range-delimiter">-</term>
     </terms>
   </locale>
   <macro name="container-contributors">
     <!-- Macro responsavel por mostrar os nomes dos organizadores ou editores -->
     <choose>
-      <if type="chapter entry-dictionary entry-encyclopedia">
+      <if type="chapter entry-dictionary entry-encyclopedia" match="any">
         <names variable="container-author" delimiter=", ">
           <name name-as-sort-order="all" sort-separator=", " delimiter="; " delimiter-precedes-last="always">
             <name-part name="family" text-case="uppercase"/>
@@ -188,37 +199,53 @@
         </names>
       </if>
       <else>
-        <text term="composer" suffix=": "/>
-        <names variable="composer" delimiter="; ">
-          <name delimiter="; " sort-separator=" " delimiter-precedes-last="always"/>
-          <et-al font-style="italic"/>
-        </names>
+        <choose>
+          <if variable="composer">
+            <text term="composer" suffix=": "/>
+            <names variable="composer" delimiter="; ">
+              <name delimiter="; " sort-separator=" " delimiter-precedes-last="always"/>
+              <et-al font-style="italic"/>
+            </names>
+          </if>
+        </choose>
       </else>
     </choose>
   </macro>
   <macro name="interviewer">
     <!-- Macro responsavel por mostrar o nome do entrevistador -->
-    <text term="interviewer" suffix=": "/>
-    <names variable="interviewer" delimiter="; ">
-      <name and="text" sort-separator=" " delimiter-precedes-last="always"/>
-      <et-al font-style="italic"/>
-    </names>
+    <choose>
+      <if variable="interviewer">
+        <text term="interviewer" suffix=": "/>
+        <names variable="interviewer" delimiter="; ">
+          <name and="text" sort-separator=" " delimiter-precedes-last="always"/>
+          <et-al font-style="italic"/>
+        </names>
+      </if>
+    </choose>
   </macro>
   <macro name="recipient">
     <!-- Macro responsavel por mostrar o nome do destinatário -->
-    <text term="recipient" suffix=": "/>
-    <names variable="recipient" delimiter="; ">
-      <name and="text" sort-separator=" " delimiter-precedes-last="always"/>
-      <et-al font-style="italic"/>
-    </names>
+    <choose>
+      <if variable="recipient">
+        <text term="recipient" suffix=": "/>
+        <names variable="recipient" delimiter="; ">
+          <name and="text" sort-separator=" " delimiter-precedes-last="always"/>
+          <et-al font-style="italic"/>
+        </names>
+      </if>
+    </choose>
   </macro>
   <macro name="translator">
     <!-- Macro responsavel por mostrar o nome do tradutor -->
-    <text term="translator" suffix=": "/>
-    <names variable="translator" delimiter=", ">
-      <name delimiter="; " sort-separator=" " delimiter-precedes-last="always"/>
-      <et-al font-style="italic"/>
-    </names>
+    <choose>
+      <if variable="translator">
+        <text term="translator" suffix=": "/>
+        <names variable="translator" delimiter=", ">
+          <name delimiter="; " sort-separator=" " delimiter-precedes-last="always"/>
+          <et-al font-style="italic"/>
+        </names>
+      </if>
+    </choose>
   </macro>
   <macro name="author-short">
     <!-- Macro responsável por mostrar o autor na citação -->
@@ -258,6 +285,10 @@
       </else>
     </choose>
   </macro>
+  <macro name="doi">
+    <!-- DOI, quando houver, antes de "Disponível em:" (ABNT NBR 6023:2018, 7.7.6 e 7.8.5) -->
+    <text variable="DOI" prefix=" DOI: " suffix="."/>
+  </macro>
   <macro name="access">
     <!-- Macro utilizada para apresentar a URL do site utilizado e data de acesso -->
     <choose>
@@ -284,7 +315,7 @@
     <date variable="accessed" suffix=".">
       <date-part name="day" suffix=" "/>
       <date-part name="month" form="short" suffix=" "/>
-      <date-part name="year" prefix=" "/>
+      <date-part name="year"/>
     </date>
   </macro>
   <macro name="title">
@@ -296,7 +327,7 @@
       <else-if type="bill legal_case legislation post-weblog" match="any">
         <text variable="title" font-weight="normal"/>
       </else-if>
-      <else-if type="entry-dictionary entry-encyclopedia">
+      <else-if type="entry-dictionary entry-encyclopedia" match="any">
         <choose>
           <if variable="container-author editor collection-editor" match="any">
             <text variable="title" font-weight="normal" text-case="capitalize-first" suffix=". "/>
@@ -324,23 +355,24 @@
     <!-- Macro responsável por mostrar o título de evento -->
     <choose>
       <if type="paper-conference" match="any">
-        <group delimiter=", " prefix=" " suffix=". ">
-          <group delimiter=": ">
-            <text term="in" text-case="capitalize-first" font-style="italic"/>
-            <choose>
-              <if variable="event" match="any">
+        <choose>
+          <if variable="event" match="any">
+            <!-- In: NOME DO EVENTO, numeração., ano, Local. (ABNT NBR 6023:2018, 7.8.4.1) -->
+            <group delimiter=", " prefix=" " suffix=". ">
+              <group delimiter=": ">
+                <text term="in" text-case="capitalize-first" font-style="italic"/>
                 <text variable="event" text-case="uppercase"/>
-              </if>
-              <else>
-                <text variable="title-short" text-case="uppercase"/>
-                <!-- title-short utilizado para nome do evento no Mendeley -->
-              </else>
-            </choose>
-          </group>
-          <text variable="number" suffix="."/>
-          <text macro="issued-year"/>
-          <text macro="event-place"/>
-        </group>
+              </group>
+              <text variable="number" suffix="."/>
+              <text macro="event-year"/>
+              <text macro="event-place"/>
+            </group>
+          </if>
+          <else>
+            <!-- sem nome do evento, "In:" precede o título do documento -->
+            <text term="in" text-case="capitalize-first" font-style="italic" prefix=" " suffix=": "/>
+          </else>
+        </choose>
       </if>
     </choose>
   </macro>
@@ -386,25 +418,35 @@
   <macro name="publisher">
     <!-- Macro responsável por mostrar os responsáveis pela publicação. No caso de ausência deles, incluir expressões para sem local ou sem editor -->
     <group delimiter=", ">
-      <group delimiter=": " suffix=",">
-        <choose>
-          <if variable="publisher-place">
-            <text variable="publisher-place"/>
-          </if>
-          <else>
-            <text term="no-place" form="short" text-case="capitalize-first" font-style="italic" prefix="[" suffix="]"/>
-          </else>
-        </choose>
-        <choose>
-          <if variable="publisher">
-            <text variable="publisher"/>
-          </if>
-          <else>
-            <text term="no date" form="short" font-style="italic" prefix="[" suffix="]"/>
-          </else>
-        </choose>
-      </group>
-      <text macro="issued" prefix=" "/>
+      <choose>
+        <if variable="publisher-place publisher" match="none">
+          <!-- ABNT NBR 6023:2018, 8.5.6 -->
+          <text value="[S. l.: s. n.]" font-style="italic"/>
+        </if>
+        <else>
+          <group delimiter=": ">
+            <choose>
+              <if variable="publisher-place">
+                <text variable="publisher-place"/>
+              </if>
+              <else>
+                <!-- ABNT NBR 6023:2018, 8.4.4 -->
+                <text term="no-place" form="short" text-case="capitalize-first" font-style="italic" prefix="[" suffix="]"/>
+              </else>
+            </choose>
+            <choose>
+              <if variable="publisher">
+                <text variable="publisher"/>
+              </if>
+              <else>
+                <!-- ABNT NBR 6023:2018, 8.5.5 -->
+                <text value="[s. n.]" font-style="italic"/>
+              </else>
+            </choose>
+          </group>
+        </else>
+      </choose>
+      <text macro="issued"/>
     </group>
   </macro>
   <macro name="issued">
@@ -428,13 +470,13 @@
                   <date-part name="month" form="short"/>
                 </date>
               </group>
-              <date variable="issued" date-parts="year" form="numeric" prefix=" "/>
+              <date variable="issued" date-parts="year" form="numeric"/>
             </if>
             <else-if type="book" variable="ISSN">
-              <date variable="issued" date-parts="year" form="numeric" prefix=" " suffix="-"/>
+              <date variable="issued" date-parts="year" form="numeric" suffix="-"/>
             </else-if>
             <else>
-              <date variable="issued" date-parts="year" form="numeric" prefix=" "/>
+              <date variable="issued" date-parts="year" form="numeric"/>
               <!-- para poder incluir a data original, quando houver interesse, mas não é previsto na ABNT -->
               <date variable="original-date" date-parts="year" form="numeric" prefix=" [" suffix="]"/>
             </else>
@@ -455,16 +497,43 @@
   </macro>
   <macro name="issued-year">
     <!-- Macro responsável por mostrar apenas o ano -->
+    <choose>
+      <if type="paper-conference" match="none">
+        <choose>
+          <if variable="event-date" match="any">
+            <date date-parts="year" form="numeric" variable="event-date"/>
+          </if>
+          <else>
+            <text macro="publication-year"/>
+          </else>
+        </choose>
+      </if>
+      <else>
+        <!-- trabalho em evento é citado pelo ano de publicação, não pelo ano do evento -->
+        <text macro="publication-year"/>
+      </else>
+    </choose>
+  </macro>
+  <macro name="event-year">
+    <!-- ano de realização do evento (event-date) ou, na sua falta, o ano de publicação -->
+    <choose>
+      <if variable="event-date" match="any">
+        <date date-parts="year" form="numeric" variable="event-date"/>
+      </if>
+      <else>
+        <text macro="publication-year"/>
+      </else>
+    </choose>
+  </macro>
+  <macro name="publication-year">
+    <!-- Macro responsável por mostrar apenas o ano de publicação -->
     <group>
       <choose>
-        <if variable="event-date" match="any">
-          <date date-parts="year" form="numeric" variable="event-date"/>
-        </if>
-        <else-if is-uncertain-date="issued">
+        <if is-uncertain-date="issued">
           <date variable="issued">
             <date-part name="year" prefix="[" suffix="]"/>
           </date>
-        </else-if>
+        </if>
         <else-if variable="issued" match="any">
           <choose>
             <if type="book" variable="ISSN">
@@ -647,11 +716,7 @@
     </sort>
     <layout prefix="(" suffix=")" delimiter="; ">
       <!-- citações entre parênteses, separando mais de um documento com ponto-e-vírgula -->
-      <choose>
-        <if match="any" disambiguate="true">
-          <text variable="title" form="short" font-style="normal"/>
-        </if>
-      </choose>
+      <!-- documentos com mesmo autor (ou título) e ano são desambiguados apenas pelo sufixo de ano (1991a, 1991b) -->
       <choose>
         <if type="broadcast motion_picture song" match="any">
           <!-- documentos em que citação é pelo título -->
@@ -683,11 +748,11 @@
     <!-- REFERÊNCIAS: a partir de 4 autores utiliza et al., alinhamento a esquerda, espaçamento simples e uma linha entre referências -->
     <sort>
       <key macro="author-short"/>
-      <key variable="year-suffix"/>
-      <key macro="title"/>
       <!-- ordena primeiro pela macro autor -->
       <key variable="issued"/>
       <!-- em seguida pela data -->
+      <key variable="year-suffix"/>
+      <!-- e por fim pelo sufixo de ano -->
     </sort>
     <layout>
       <choose>
@@ -715,6 +780,7 @@
             <text macro="edition" suffix=", "/>
             <text macro="locators" suffix=", "/>
             <text macro="issued"/>
+            <text macro="doi"/>
             <text macro="access"/>
           </group>
         </else-if>
@@ -787,6 +853,7 @@
                 <text variable="title-short" suffix=". "/>
               </if>
             </choose>
+            <text macro="doi"/>
             <text macro="access"/>
           </group>
         </else-if>
@@ -1056,12 +1123,11 @@
           <text macro="author" suffix=". "/>
           <text macro="title"/>
           <text macro="event"/>
-          <text macro="container-contributors" text-case="uppercase"/>
-          <text macro="secondary-contributors"/>
           <text macro="container-title"/>
           <text macro="locators"/>
           <text macro="publisher"/>
           <text macro="pages" suffix="."/>
+          <text macro="doi"/>
           <text macro="access"/>
         </else-if>
         <else-if type="patent">
@@ -1089,7 +1155,7 @@
             <text macro="genre" prefix=" "/>
           </group>
         </else-if>
-        <else-if type="post webpage">
+        <else-if type="post webpage" match="any">
           <!-- Página web e Fórum -->
           <group>
             <text macro="author" suffix=". "/>
