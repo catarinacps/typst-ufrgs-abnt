@@ -238,8 +238,13 @@
             top: if y == 0 {1pt} else if y == 1 {0.75pt} else {0pt},
             bottom: 1pt
         ),
-        align: horizon
+        align: horizon,
+        inset: 4pt,
     )
+
+    show table.cell: set text(size: 10pt)
+
+    show std-figure.where(kind: raw): set par(leading: single-spacing)
 
     set heading(numbering: "1.1", outlined: true)
 
