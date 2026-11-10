@@ -7,18 +7,18 @@
     name: [Instituto de Informática],
     department-ina: [Departamento de Informática Aplicada],
     department-int: [Departamento de Informática Teórica],
-    director: ([Diretora do Instituto de Informática], [Prof#super[a]. Carla Maria Dal Sasso Freitas]),
-    librarian: ([Bibliotecário-Chefe do Instituto de Informática], [Alexsander Borges Ribeiro]),
-    cic-coord: ([Coordenador do Curso de Ciência de Computação], [Prof. Marcelo Walter]),
+    director: ([Diretor do Instituto de Informática], [Prof. Luciano Paschoal Gaspary]),
+    librarian: ([Bibliotecário-chefe do Instituto de Informática], [Alexsander Borges Ribeiro]),
+    cic-coord: ([Coordenador do Curso de Ciência de Computação], [Prof. Álvaro Freitas Moreira]),
 )
 
 #let ufrgs = (
     name: [Universidade Federal do Rio Grande do Sul],
     location: [Porto Alegre, RS],
     nominata: (
-        ([Reitor], [Prof. Carlos André Bulhões]),
-        ([Vice-Reitora], [Prof#super[a]. Patricia Pranke]),
-        ([Pró-Reitor de Graduação], [Prof. Júlio Otávio Jardim Barcellos])
+        ([Reitora], [Prof#super[a]. Marcia Cristina Bernardes Barbosa]),
+        ([Vice-Reitor], [Prof. Pedro de Almeida Costa]),
+        ([Pró-Reitora de Graduação], [Prof#super[a]. Nádya Pesce da Silveira])
     ),
     courses: (
         cic: (
