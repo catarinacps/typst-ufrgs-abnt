@@ -246,6 +246,23 @@
 
     show std-figure.where(kind: raw): set par(leading: single-spacing)
 
+    // Footnotes (ABNT NBR 10520:2023, 8): smaller font, single spacing, no blank
+    // space between notes, continuation lines aligned under the first letter of
+    // the note so the number stands out; numbering restarts at each chapter.
+    set footnote.entry(indent: 0em, gap: single-spacing)
+    show footnote.entry: it => {
+        let loc = it.note.location()
+        set text(size: 10pt)
+        set par(first-line-indent: 0pt, hanging-indent: 0pt, leading: single-spacing, justify: true)
+        grid(
+            columns: (auto, 1fr),
+            column-gutter: 0.15em,
+            link(loc, super(counter(footnote).display(at: loc, it.note.numbering))),
+            it.note.body,
+        )
+    }
+    show heading.where(level: 1): it => counter(footnote).update(0) + it
+
     set heading(numbering: "1.1", outlined: true)
 
     show heading.where(level: 1): set heading(supplement: [Chapter])
