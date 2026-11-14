@@ -95,7 +95,7 @@
             <name-part name="family" text-case="uppercase"/>
             <name-part name="given"/>
           </name>
-          <label form="short" prefix=" (" suffix=".)"/>
+          <label form="short" prefix=" (" suffix=")"/>
           <et-al font-style="italic"/>
           <substitute>
             <names variable="editor"/>
@@ -159,7 +159,7 @@
             <name-part name="given"/>
           </name>
           <et-al font-style="italic"/>
-          <label form="short" text-case="lowercase" prefix=" (" suffix=".)"/>
+          <label form="short" text-case="lowercase" prefix=" (" suffix=")"/>
           <substitute>
             <!-- na ausência de um autor, utiliza organizador, editor, tradutor ou título  -->
             <text variable="title" text-case="uppercase"/>
@@ -174,7 +174,7 @@
             <name-part name="given"/>
           </name>
           <et-al font-style="italic"/>
-          <label form="short" text-case="lowercase" prefix=" (" suffix=".)"/>
+          <label form="short" text-case="lowercase" prefix=" (" suffix=")"/>
           <substitute>
             <!-- na ausência de um autor, utiliza organizador, editor, tradutor ou título  -->
             <names variable="editor"/>
@@ -959,6 +959,7 @@
             <text macro="publisher"/>
             <text macro="collection-title" prefix="(" suffix="). "/>
             <text macro="locators" suffix=". "/>
+            <text macro="doi"/>
             <text macro="access"/>
           </group>
         </else-if>
