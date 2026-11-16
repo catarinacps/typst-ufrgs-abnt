@@ -127,14 +127,15 @@
 
     show heading: set text(size: 12pt, weight: "regular")
 
-    show heading: it => if it.level < 4 {
-        section-spacing
-        it
-        section-spacing
-    }
+    // ABNT NBR 14724, 5.2.2: titles separated from the surrounding text by a
+    // blank 1.5-spaced line.
+    show heading: set block(above: section-spacing, below: section-spacing)
 
+    // ABNT NBR 6024, 4.1 j: gradual typographic distinction from the primary
+    // to the quinary section, identical in the summary (NBR 6027, 6.2).
     show heading.where(level: 1): it => strong(upper(it))
     show heading.where(level: 2): it => strong(it)
+    show heading.where(level: 3): it => strong(emph(it))
     show heading.where(level: 4): it => emph(it)
 
     show heading.where(numbering: none): it => align(center + top, it)
@@ -166,7 +167,9 @@
 
         resumo-page(resumo, palavras-chave, title: titulo)
 
-        show outline.entry: set text(bottom-edge: "descender")
+        // Lists and the summary are single-spaced, following the INF house
+        // style (infufrgs.cls); ABNT NBR 14724, 5.2 would call for 1.5 here.
+        set par(leading: single-spacing, spacing: single-spacing)
 
         context {
             if counter(std-figure.where(kind: image)).final().at(0) > 0 {
@@ -184,14 +187,37 @@
 
         glossary-page(glossary)
 
-        show outline.entry.where(level: 1): it => strong(upper(it))
-        show outline.entry.where(level: 2): it => strong(it)
-        show outline.entry.where(level: 4): it => emph(it)
+        // ABNT NBR 6027, 5.1-5.2: section numbers flush left, all titles
+        // (post-textual ones included) aligned by the longest number; 6.2:
+        // same typographic distinction as the section titles in the text.
+        show outline.entry: it => context {
+            let numbers = query(heading.where(outlined: true))
+                .filter(h => h.numbering != none)
+                .map(h => measure(strong(numbering(h.numbering, ..counter(heading).at(h.location())))).width)
+            let width = calc.max(0pt, ..numbers) + 0.5em
+            let entry = link(
+                it.element.location(),
+                it.indented(box(width: width, it.prefix()), it.inner(), gap: 0pt),
+            )
+            if it.level == 1 { strong(upper(entry)) }
+            else if it.level == 2 { strong(entry) }
+            else if it.level == 3 { strong(emph(entry)) }
+            else if it.level == 4 { emph(entry) }
+            else { entry }
+        }
+        // One blank (single) line before primary sections (not required by
+        // ABNT; eases reading the summary's structure).
+        show outline.entry.where(level: 1): set block(above: double-spacing)
+
+        // ABNT NBR 6027, 4.1 b: the summary starts on a recto page.
+        if two-sided { pagebreak(to: "odd", weak: true) }
 
         outline(title: [Summary])
     }
 
-    show heading.where(level: 1): it => pagebreak(weak: true) + it
+    // ABNT NBR 14724, 5.2.2: primary sections start on a new page, on a recto
+    // (odd) page when printed on both sides.
+    show heading.where(level: 1): it => pagebreak(weak: true, to: if two-sided { "odd" }) + it
     // show heading: it => { it; par(box()); v(-0.75em) }
 
     set par(first-line-indent: (amount: 1.25cm, all: true), leading: normal-spacing, spacing: normal-spacing)
@@ -209,7 +235,10 @@
         gap: 0.5em
     )
 
+    // ABNT NBR 14724, 5.1-5.2: titles, sources and legends of illustrations
+    // and tables in a smaller font and single spacing.
     show std-figure.caption: set text(size: 10pt)
+    show std-figure.caption: set par(leading: single-spacing, spacing: single-spacing)
 
     show std-figure.caption.where(position: bottom): it => {
         set align(start)
@@ -246,17 +275,33 @@
 
     show std-figure.where(kind: raw): set par(leading: single-spacing)
 
+    // ABNT NBR 10520:2023, 7.1.1: direct quotations longer than three lines
+    // indented 4cm from the left margin, smaller font, single spacing, no
+    // quotation marks. Set apart from the text by a blank 1.5-spaced line.
+    show quote.where(block: true): it => block(
+        inset: (left: 4cm),
+        above: section-spacing,
+        below: section-spacing,
+        {
+            set text(size: 10pt)
+            set par(first-line-indent: 0pt, leading: single-spacing, spacing: single-spacing)
+            it.body
+            if it.attribution != none [ #it.attribution]
+        },
+    )
+
     // Footnotes (ABNT NBR 10520:2023, 8): smaller font, single spacing, no blank
     // space between notes, continuation lines aligned under the first letter of
     // the note so the number stands out; numbering restarts at each chapter.
-    set footnote.entry(indent: 0em, gap: single-spacing)
+    // ABNT NBR 14724, 5.2.1: separated from the text by a 5cm rule.
+    set footnote.entry(indent: 0em, gap: single-spacing, separator: pad(bottom: 0.3em, line(length: 5cm, stroke: 0.5pt)))
     show footnote.entry: it => {
         let loc = it.note.location()
         set text(size: 10pt)
         set par(first-line-indent: 0pt, hanging-indent: 0pt, leading: single-spacing, justify: true)
         grid(
             columns: (auto, 1fr),
-            column-gutter: 0.15em,
+            column-gutter: 0.5em,
             link(loc, super(counter(footnote).display(at: loc, it.note.numbering))),
             it.note.body,
         )
@@ -268,16 +313,19 @@
     show heading.where(level: 1): set heading(supplement: [Chapter])
     show heading.where(level: 3): set heading(supplement: [Subsection])
     show heading.where(level: 4): set heading(supplement: [Subsubsection])
-    show heading.where(level: 5): set heading(supplement: [Subsubsubsection])
+    show heading.where(level: 5): set heading(supplement: [Paragraph])
 
+    // ABNT NBR 14724, 5.3: top outer corner, 2cm from the top edge, the last
+    // digit 2cm from the side edge (i.e. at the outer margin), smaller font.
     set page(header: context {
+        set text(size: 10pt)
         align(
             if calc.odd(here().page()) or not two-sided {
                 right
             } else {
                 left
             },
-            pad(x: -0.5cm)[#here().page()]
+            [#here().page()]
         )
     })
 
@@ -285,7 +333,9 @@
         body
     }
 
-    set par(justify: true, leading: single-spacing, spacing: single-spacing)
+    // ABNT NBR 6023, 6.3: single spacing, aligned to the left margin, entries
+    // separated by a blank single-spaced line.
+    set par(justify: false, leading: single-spacing, spacing: double-spacing)
 
     if references != none {
         bibliography(references, style: path("abnt-ufrgs.csl"), title: [References])

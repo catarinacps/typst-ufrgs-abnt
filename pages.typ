@@ -50,7 +50,7 @@
 #let acknowledgements-page(acknowledgements) = page[
     = Acknowledgements
 
-    #set par(first-line-indent: 3em, leading: 0.75em, spacing: 0.75em)
+    #set par(first-line-indent: 3em, leading: normal-spacing, spacing: normal-spacing)
 
     #acknowledgements
 ]
@@ -68,7 +68,7 @@
 #let abstract-page(abstract, keywords) = page[
     = Abstract
 
-    #par(leading: 0.75em, abstract)
+    #par(leading: normal-spacing, abstract)
 
     #v(1.5cm)
 
@@ -82,7 +82,7 @@
 
     = Resumo
 
-    #par(leading: 0.75em, abstract)
+    #par(leading: normal-spacing, abstract)
 
     #v(1.5cm)
 
