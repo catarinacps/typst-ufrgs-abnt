@@ -287,18 +287,18 @@
   </macro>
   <macro name="doi">
     <!-- DOI, quando houver, antes de "Disponível em:" (ABNT NBR 6023:2018, 7.7.6 e 7.8.5) -->
-    <text variable="DOI" prefix=" DOI: " suffix="."/>
+    <text variable="DOI" prefix="DOI: " suffix=". "/>
   </macro>
   <macro name="access">
     <!-- Macro utilizada para apresentar a URL do site utilizado e data de acesso -->
     <choose>
       <if variable="ISSN">
-        <text term="available at" text-case="capitalize-first" prefix=" " suffix=": "/>
+        <text term="available at" text-case="capitalize-first" suffix=": "/>
         <text variable="URL" suffix=". "/>
         <text macro="access-expression"/>
       </if>
       <else>
-        <text term="available at" text-case="capitalize-first" prefix=" " suffix=": "/>
+        <text term="available at" text-case="capitalize-first" suffix=": "/>
         <text variable="URL" suffix=". "/>
         <text macro="access-expression"/>
       </else>
@@ -358,7 +358,7 @@
         <choose>
           <if variable="event" match="any">
             <!-- In: NOME DO EVENTO, numeração., ano, Local. (ABNT NBR 6023:2018, 7.8.4.1) -->
-            <group delimiter=", " prefix=" " suffix=". ">
+            <group delimiter=", " suffix=". ">
               <group delimiter=": ">
                 <text term="in" text-case="capitalize-first" font-style="italic"/>
                 <text variable="event" text-case="uppercase"/>
@@ -370,7 +370,7 @@
           </if>
           <else>
             <!-- sem nome do evento, "In:" precede o título do documento -->
-            <text term="in" text-case="capitalize-first" font-style="italic" prefix=" " suffix=": "/>
+            <text term="in" text-case="capitalize-first" font-style="italic" suffix=": "/>
           </else>
         </choose>
       </if>
@@ -400,7 +400,13 @@
           </else>
         </choose>
       </if>
-      <else-if type="chapter entry-dictionary entry-encyclopedia" match="any">
+      <else-if type="chapter">
+        <!-- ABNT NBR 6023:2018, 7.3: título do todo em negrito. Sem a condição
+             abaixo porque o Typst (hayagriva) não enxerga, em <if variable>,
+             o editor e o título que vêm do documento pai (booktitle/editor). -->
+        <text variable="container-title" font-weight="bold"/>
+      </else-if>
+      <else-if type="entry-dictionary entry-encyclopedia" match="any">
         <choose>
           <if variable="container-author editor collection-editor" match="any">
             <text variable="container-title" font-weight="bold"/>
@@ -438,6 +444,45 @@
               <if variable="publisher">
                 <text variable="publisher"/>
               </if>
+              <else>
+                <!-- ABNT NBR 6023:2018, 8.5.5 -->
+                <text value="[s. n.]" font-style="italic"/>
+              </else>
+            </choose>
+          </group>
+        </else>
+      </choose>
+      <text macro="issued"/>
+    </group>
+  </macro>
+  <macro name="publisher-or-authority">
+    <!-- Igual à macro "publisher", mas usa "authority" na ausência de "publisher".
+         Typst/hayagriva mapeia institution/organization (BibLaTeX) para "authority",
+         que é o responsável pela publicação em relatórios e manuais -->
+    <group delimiter=", ">
+      <choose>
+        <if variable="publisher-place publisher authority" match="none">
+          <!-- ABNT NBR 6023:2018, 8.5.6 -->
+          <text value="[S. l.: s. n.]" font-style="italic"/>
+        </if>
+        <else>
+          <group delimiter=": ">
+            <choose>
+              <if variable="publisher-place">
+                <text variable="publisher-place"/>
+              </if>
+              <else>
+                <!-- ABNT NBR 6023:2018, 8.4.4 -->
+                <text term="no-place" form="short" text-case="capitalize-first" font-style="italic" prefix="[" suffix="]"/>
+              </else>
+            </choose>
+            <choose>
+              <if variable="publisher">
+                <text variable="publisher"/>
+              </if>
+              <else-if variable="authority">
+                <text variable="authority"/>
+              </else-if>
               <else>
                 <!-- ABNT NBR 6023:2018, 8.5.5 -->
                 <text value="[s. n.]" font-style="italic"/>
@@ -763,8 +808,8 @@
             <text variable="authority" suffix=". "/>
             <text macro="title" suffix=" "/>
             <text variable="medium" suffix=". "/>
-            <text macro="publisher" suffix=" "/>
-            <text variable="genre" suffix="."/>
+            <text macro="publisher"/>
+            <text variable="genre" suffix=". "/>
             <text macro="access"/>
           </group>
         </if>
@@ -792,7 +837,7 @@
             <text macro="title"/>
             <text macro="container-title" suffix=", "/>
             <text macro="place" prefix=" "/>
-            <text macro="locators"/>
+            <text macro="locators" suffix=" "/>
             <text macro="access"/>
           </group>
         </else-if>
@@ -843,9 +888,9 @@
             <text variable="genre" suffix=". "/>
             <text macro="edition" suffix=". "/>
             <text macro="publisher"/>
-            <text variable="ISSN" prefix="ISSN " suffix="."/>
+            <text variable="ISSN" prefix="ISSN " suffix=". "/>
             <text macro="collection-title" prefix="(" suffix="). "/>
-            <text macro="locators"/>
+            <text macro="locators" suffix=". "/>
             <text variable="medium" suffix=". "/>
             <choose>
               <if variable="genre" match="any">
@@ -863,8 +908,8 @@
             <text macro="author" suffix=". "/>
             <text macro="title" suffix=" "/>
             <text variable="medium" suffix=". "/>
-            <text macro="publisher" suffix=" "/>
-            <text variable="genre" suffix="."/>
+            <text macro="publisher"/>
+            <text variable="genre" suffix=". "/>
             <text macro="access"/>
           </group>
         </else-if>
@@ -951,7 +996,7 @@
             <text macro="author" suffix=". "/>
             <text variable="authority" suffix=". "/>
             <text macro="title"/>
-            <text term="in" text-case="capitalize-first" prefix=" " suffix=": " font-style="italic"/>
+            <text term="in" text-case="capitalize-first" suffix=": " font-style="italic"/>
             <text macro="container-contributors" suffix=". "/>
             <text macro="container-title" suffix=". "/>
             <text macro="translator" suffix=". "/>
@@ -969,7 +1014,7 @@
             <text macro="author" suffix=". "/>
             <text variable="authority" suffix=". "/>
             <text macro="title"/>
-            <text term="in" text-case="capitalize-first" font-style="italic" prefix=" " suffix=": "/>
+            <text term="in" text-case="capitalize-first" font-style="italic" suffix=": "/>
             <text macro="container-contributors" suffix="."/>
             <text macro="container-title" prefix=" " suffix=". "/>
             <text macro="publisher"/>
@@ -987,8 +1032,8 @@
             <text macro="issued-year" suffix=". "/>
             <text variable="medium" suffix=", "/>
             <text variable="dimensions" suffix=". "/>
-            <text variable="genre" suffix="."/>
-            <text variable="archive" suffix="."/>
+            <text variable="genre" suffix=". "/>
+            <text variable="archive" suffix=". "/>
             <text macro="access"/>
           </group>
         </else-if>
@@ -1044,7 +1089,7 @@
                 <text variable="volume" suffix=", "/>
                 <text macro="number" suffix=", "/>
                 <text macro="pages" suffix=", "/>
-                <text macro="issued-legislation" suffix="."/>
+                <text macro="issued-legislation" suffix=". "/>
                 <text macro="access"/>
               </group>
             </if>
@@ -1056,7 +1101,7 @@
                 <text variable="abstract" suffix=". "/>
                 <text variable="publisher-place" suffix=": "/>
                 <text variable="publisher" suffix=", "/>
-                <text macro="issued-legislation" suffix="."/>
+                <text macro="issued-legislation" suffix=". "/>
                 <text macro="access"/>
               </group>
             </else>
@@ -1073,7 +1118,7 @@
                 <group>
                   <text variable="genre" suffix=". "/>
                   <text macro="publisher"/>
-                  <text variable="medium" suffix="."/>
+                  <text variable="medium" suffix=". "/>
                 </group>
               </if>
               <else>
@@ -1081,7 +1126,7 @@
                   <text variable="publisher-place" suffix=", "/>
                   <text variable="publisher" suffix=", "/>
                   <text macro="issued"/>
-                  <text variable="genre" prefix=" " suffix="."/>
+                  <text variable="genre" suffix=". "/>
                 </group>
               </else>
             </choose>
@@ -1114,8 +1159,8 @@
             <text macro="title" suffix=" "/>
             <text variable="genre" suffix=". "/>
             <text macro="publisher"/>
-            <text variable="medium" suffix="."/>
-            <text variable="archive" prefix=" " suffix="."/>
+            <text variable="medium" suffix=". "/>
+            <text variable="archive" suffix=". "/>
             <text macro="access"/>
           </group>
         </else-if>
@@ -1127,7 +1172,7 @@
           <text macro="container-title"/>
           <text macro="locators"/>
           <text macro="publisher"/>
-          <text macro="pages" suffix="."/>
+          <text macro="pages" suffix=". "/>
           <text macro="doi"/>
           <text macro="access"/>
         </else-if>
@@ -1187,16 +1232,19 @@
           <!-- Relatório -->
           <group>
             <text macro="author" suffix=". "/>
-            <text variable="authority" suffix=". "/>
             <text macro="title"/>
             <text macro="container-contributors"/>
             <text macro="secondary-contributors"/>
             <text macro="container-title"/>
             <text variable="collection-title" prefix=": "/>
             <text macro="locators"/>
-            <text macro="publisher" prefix=". "/>
+            <!-- a instituição ("authority") é o responsável pela publicação, não um segundo autor -->
+            <text macro="publisher-or-authority" prefix=". "/>
             <!--incluido genre para funcionar manuscript no Mendeley-->
-            <text variable="genre" prefix=" " suffix="."/>
+            <group delimiter=" " suffix=". ">
+              <text variable="genre" text-case="capitalize-first"/>
+              <text macro="number"/>
+            </group>
             <text macro="access" suffix="."/>
           </group>
         </else-if>
@@ -1227,8 +1275,19 @@
             <text macro="title" suffix=". "/>
             <text macro="issued-year" suffix=". "/>
             <text variable="number-of-pages" suffix=" f. "/>
-            <text variable="genre"/>
-            <text variable="publisher" prefix=" - " suffix=", "/>
+            <!-- ABNT NBR 6023 7.2: "Tese (Doutorado em ...) – Instituição, Local, ano."
+                 Typst/hayagriva maps the BibLaTeX school/institution to "authority", not "publisher" -->
+            <group delimiter=" – " suffix=", ">
+              <text variable="genre"/>
+              <choose>
+                <if variable="authority">
+                  <text variable="authority"/>
+                </if>
+                <else>
+                  <text variable="publisher"/>
+                </else>
+              </choose>
+            </group>
             <text macro="place"/>
             <text macro="issued"/>
             <text macro="access"/>
@@ -1237,16 +1296,14 @@
         <else>
           <!-- Formato padrão para documentos não previstos -->
           <text macro="author" suffix=". "/>
-          <text variable="authority" suffix=". "/>
           <text macro="title"/>
           <text macro="container-contributors"/>
           <text macro="secondary-contributors"/>
           <text macro="container-title"/>
           <text variable="collection-title" prefix=": " suffix="."/>
           <text macro="locators"/>
-          <text variable="publisher-place"/>
-          <text variable="publisher" suffix=", "/>
-          <text macro="issued" prefix=", "/>
+          <!-- e.g. @manual: organization ("authority") is the publisher, not a second author -->
+          <text macro="publisher-or-authority"/>
           <text macro="access"/>
           <text variable="medium"/>
           <text variable="genre"/>
