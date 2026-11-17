@@ -47,6 +47,22 @@
         } else { inner }
     }
 
+// Post-textual parts with lettered primary sections (ABNT NBR 14724:2024,
+// 4.2.3.3-4.2.3.4): the state holds the word that precedes the letter
+// ("Appendix", "Annex") inside them, and is `none` elsewhere.
+#let post-textual = state("typst-ufrgs-abnt-post-textual", none)
+
+// Consecutive capital letters, doubled once the alphabet is exhausted
+// (A, ..., Z, AA, BB, ...); lower levels numbered as usual (A.1, A.1.1).
+#let post-textual-letter(n) = {
+    let k = n - 1
+    str.from-unicode(65 + calc.rem(k, 26)) * (calc.quo(k, 26) + 1)
+}
+#let post-textual-numbering(..nums) = {
+    let n = nums.pos()
+    (post-textual-letter(n.first()), ..n.slice(1).map(str)).join(".")
+}
+
 #let author(surname, first-name, title: none) = {
     (surname: surname, first-name: first-name, title: title)
 }
@@ -101,6 +117,13 @@
 
     references: none,
 
+    // Post-textual elements, printed after the references in this order
+    // (ABNT NBR 14724:2024, 4.2.3). Each primary section (`=`) in them is one
+    // appendix/annex, titled "APPENDIX A — TITLE".
+    appendices: none,
+
+    annexes: none,
+
     two-sided: true,
 
     body,
@@ -150,7 +173,19 @@
 
     // ABNT NBR 6024, 4.1 j: gradual typographic distinction from the primary
     // to the quinary section, identical in the summary (NBR 6027, 6.2).
-    show heading.where(level: 1): it => strong(upper(it))
+    show heading.where(level: 1): it => context {
+        let word = post-textual.get()
+        if word != none and it.numbering != none {
+            // ABNT NBR 14724:2024, 4.2.3.3-4.2.3.4 and 5.2.3: the word, the
+            // letter, a dash and the title, centered.
+            set align(center)
+            block(sticky: true, strong(upper[
+                #word #counter(heading).display(it.numbering) --- #it.body
+            ]))
+        } else {
+            strong(upper(it))
+        }
+    }
     show heading.where(level: 2): it => strong(it)
     show heading.where(level: 3): it => strong(emph(it))
     show heading.where(level: 4): it => emph(it)
@@ -217,13 +252,21 @@
         // (post-textual ones included) aligned by the longest number; 6.2:
         // same typographic distinction as the section titles in the text.
         show outline.entry: it => context {
+            let lettered(h) = h.level == 1 and post-textual.at(h.location()) != none
             let numbers = query(heading.where(outlined: true))
-                .filter(h => h.numbering != none)
+                .filter(h => h.numbering != none and not lettered(h))
                 .map(h => measure(strong(numbering(h.numbering, ..counter(heading).at(h.location())))).width)
             let width = calc.max(0pt, ..numbers) + 0.5em
+            // Appendices and annexes: the whole "APPENDIX A — Title" is
+            // the title, aligned with the other titles.
+            let word = post-textual.at(it.element.location())
             let entry = link(
                 it.element.location(),
-                it.indented(box(width: width, it.prefix()), it.inner(), gap: 0pt),
+                if it.level == 1 and word != none and it.element.numbering != none {
+                    it.indented(box(width: width), [#word #it.prefix() --- ] + it.inner(), gap: 0pt)
+                } else {
+                    it.indented(box(width: width, it.prefix()), it.inner(), gap: 0pt)
+                },
             )
             if it.level == 1 { strong(upper(entry)) }
             else if it.level == 2 { strong(entry) }
@@ -360,11 +403,30 @@
         body
     }
 
-    // ABNT NBR 6023, 6.3: single spacing, aligned to the left margin, entries
-    // separated by a blank single-spaced line.
-    set par(justify: false, leading: single-spacing, spacing: double-spacing)
-
     if references != none {
+        // ABNT NBR 6023, 6.3: single spacing, aligned to the left margin,
+        // entries separated by a blank single-spaced line.
+        set par(justify: false, leading: single-spacing, spacing: double-spacing)
+
         bibliography(references, style: path("abnt-ufrgs.csl"), title: labels.references)
+    }
+
+    let lettered-part(content, word) = {
+        post-textual.update(word)
+        counter(heading).update(0)
+
+        set heading(numbering: post-textual-numbering)
+        show heading.where(level: 1): set heading(supplement: word)
+        show std-figure: i-figured.show-figure.with(numbering: post-textual-numbering)
+
+        content
+    }
+
+    if appendices != none {
+        lettered-part(appendices, labels.appendix)
+    }
+
+    if annexes != none {
+        lettered-part(annexes, labels.annex)
     }
 }
