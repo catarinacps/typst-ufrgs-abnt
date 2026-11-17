@@ -91,10 +91,73 @@
     -- #author
 ])
 
-#let nominata-page(institution, course) = page(align(bottom + left)[
-    #upper(institution.name)\
-    #(institution.nominata + course.nominata).map(it => it.join([: ])).join(linebreak())
-])
+// The nominata, at the bottom of the back of the title page. The top of the
+// page holds the catalog card (`card`), if any; without one it stays free for
+// the card the UFRGS library stamps onto the submitted PDF.
+#let nominata-page(institution, course, card: none) = page({
+    if card != none {
+        align(center, card)
+    }
+
+    v(1fr)
+
+    upper(institution.name)
+    linebreak()
+    (institution.nominata + course.nominata).map(it => it.join([: ])).join(linebreak())
+})
+
+// The catalog card (ficha catalográfica, CIP; ABNT NBR 14724:2024, 4.2.1.1.2),
+// laid out like the `\iiu@cipwindow` box of infufrgs.cls and the cards the
+// UFRGS library issues. Institution and unit names are always the Portuguese
+// ones (`institution-pt`, `course-pt`), as on the library's cards. The page
+// count is the last page number, in sheets ("f.") one-sided or pages ("p.")
+// two-sided; "il." is added when the document has figures.
+#let make-catalog-card(
+    author, advisor, co-advisor, keywords, institution-pt, course-pt, date, two-sided, labels,
+) = context {
+    let name(person) = [#person.first-name #person.surname]
+    let entry(person) = [#person.surname, #person.first-name]
+    let year = date.display("[year]")
+    let pages = counter(page).final().first()
+    let illustrated = query(figure.where(kind: image)).len() > 0
+
+    let advisors = [#labels.advisor: #name(advisor)]
+    if co-advisor != none {
+        advisors += [; #labels.co-advisor: #name(co-advisor)]
+    }
+
+    let added = (advisor, co-advisor).filter(it => it != none).map(entry)
+    added.push(labels.catalog-card-title)
+    let roman = ("I", "II", "III", "IV", "V", "VI")
+
+    strong(upper(labels.catalog-card))
+    v(1em)
+
+    block(width: 120mm, stroke: 0.5pt, inset: (x: 5mm, y: 4mm), {
+        set align(left)
+        set par(
+            justify: true,
+            leading: single-spacing,
+            spacing: 0.6em,
+            first-line-indent: (amount: 1.5em, all: false),
+        )
+
+        entry(author)
+        parbreak()
+        [#document.title / #name(author). -- #institution-pt.city, #year.]
+        parbreak()
+        [#pages #if two-sided [p.] else [f.]#if illustrated [: il. color.]]
+        parbreak()
+        [#labels.catalog-card-nature -- #institution-pt.name. #course-pt.department.
+            #course-pt.program, #institution-pt.city, BR--#institution-pt.state, #year.
+            #advisors.]
+        parbreak()
+        (
+            keywords.enumerate().map(((i, k)) => [#(i + 1). #k.])
+            + added.enumerate().map(((i, e)) => [#roman.at(i). #e.])
+        ).join(" ")
+    })
+}
 
 // The approval sheet (folha de aprovação, ABNT NBR 14724:2024, 4.2.1.3), with
 // no title (5.2.4). `approval` is either content (a scanned signed sheet,

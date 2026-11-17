@@ -10,6 +10,8 @@
 #let ufrgs = (
     name: [Universidade Federal do Rio Grande do Sul],
     location: [Porto Alegre, RS],
+    city: [Porto Alegre],
+    state: [RS],
     nominata: (
         ([Reitora], [Prof#super[a]. Marcia Cristina Bernardes Barbosa]),
         ([Vice-Reitor], [Prof. Pedro de Almeida Costa]),

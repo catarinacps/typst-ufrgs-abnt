@@ -130,6 +130,12 @@
     // content such as `image("approval.pdf")` to place a scanned signed sheet.
     approval: none,
 
+    // Catalog card (ficha catalográfica, ABNT NBR 14724:2024, 4.2.1.1.2), at
+    // the top of the nominata page: `none` (at UFRGS the library adds it to the
+    // submitted PDF), `auto` to typeset it from the document's data, or
+    // content such as `image("ficha.pdf")` to place a card as-is.
+    catalog-card: none,
+
     two-sided: true,
 
     body,
@@ -173,6 +179,14 @@
             }
         }
     }
+    assert(
+        catalog-card in (none, auto) or type(catalog-card) == content,
+        message: "typst-ufrgs-abnt: `catalog-card` must be none, auto or content "
+            + "(e.g. `image(\"ficha.pdf\")`), got " + str(type(catalog-card)),
+    )
+
+    let preset-pt = localize(preset, "pt")
+    let course-pt = localize(course, "pt")
     let preset = localize(preset, language)
     let course = localize(course, language)
 
@@ -246,7 +260,14 @@
 
         title-page(preset, course, author, advisor, co-advisor, date, labels)
 
-        nominata-page(preset, course)
+        nominata-page(preset, course, card: if catalog-card == auto {
+            make-catalog-card(
+                author, advisor, co-advisor, abstracts.at(language).keywords,
+                preset-pt, course-pt, date, two-sided, labels,
+            )
+        } else {
+            catalog-card
+        })
 
         if approval != none {
             approval-page(approval, author, course, language, labels)

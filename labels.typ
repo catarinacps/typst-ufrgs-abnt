@@ -26,6 +26,9 @@
         co-advisor: [Co-advisor],
         approved-on: [Approved on],
         examining-committee: [Examining committee],
+        catalog-card: [CIP --- Cataloging-in-Publication],
+        catalog-card-nature: [Thesis (Bachelor)],
+        catalog-card-title: [Título], // also uses "Título"
         bachelors-nature: (title, course) => [
             Work presented in partial fulfillment
             of the requirements for the degree of
@@ -54,6 +57,9 @@
         co-advisor: [Coorientador],
         approved-on: [Aprovado em],
         examining-committee: [Banca examinadora],
+        catalog-card: [CIP --- Catalogação na Publicação],
+        catalog-card-nature: [Trabalho de conclusão (graduação)],
+        catalog-card-title: [Título],
         bachelors-nature: (title, course) => [
             Monografia apresentada como requisito
             parcial para a obtenção do grau de
