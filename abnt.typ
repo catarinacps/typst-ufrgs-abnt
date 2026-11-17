@@ -242,9 +242,9 @@
     {
         // show heading: it => { it; par(box()); v(-0.25em) }
 
-        cover-page(preset, course, author, advisor, co-advisor, date, labels)
+        cover-page(preset, course, author, date, two-sided)
 
-        blank-page(labels)
+        title-page(preset, course, author, advisor, co-advisor, date, labels)
 
         nominata-page(preset, course)
 
@@ -440,7 +440,10 @@
             } else {
                 left
             },
-            [#here().page()]
+            // The page counter, not the physical page: the cover is not
+            // counted. The parity test above stays physical, which matches
+            // because the cover takes two pages in two-sided mode.
+            [#counter(page).get().first()]
         )
     })
 

@@ -2,8 +2,6 @@
 #import "@preview/datify:1.3.0": custom-date-format
 #import "spacing.typ": *
 
-#let blank-page(labels) = page(align(center + bottom, emph(labels.blank-page)))
-
 // The nature of the work, aligned from the middle of the text area to the
 // right margin (ABNT NBR 14724:2024, 5.2); `body` follows it in the same block.
 #let nature-block(course, labels, body: none) = align(right, block(width: 50%, {
@@ -14,8 +12,15 @@
     body
 }))
 
-#let cover-page(institution, course, author, advisor, co-advisor, date, labels) = {
+// Layout shared by the cover and the title page; `middle` (if any) goes
+// below the title. `start-counting` restarts the page counter at this page; the
+// update has to be inside the page, or it lands on the page before it.
+#let cover-layout(institution, course, author, date, middle: none, start-counting: false) = {
     page(align(center, context {
+        if start-counting {
+            counter(page).update(1)
+        }
+
         set text(hyphenate: false)
         set par(justify: false)
         set align(top)
@@ -34,17 +39,10 @@
 
         text(size: 14pt, strong(document.title))
 
-        v(1cm)
-
-        nature-block(course, labels, body: {
-            blank-line-spacing
-            [#labels.advisor: #advisor.title #advisor.first-name #advisor.surname]
-
-            if co-advisor != none {
-                linebreak()
-                [#labels.co-advisor: #co-advisor.title #co-advisor.first-name #co-advisor.surname]
-            }
-        })
+        if middle != none {
+            v(1cm)
+            middle
+        }
 
         set align(bottom)
 
@@ -52,6 +50,31 @@
             #institution.location\
             #date.display("[year]")
         ]
+    }))
+}
+
+// The cover (capa, ABNT NBR 14724:2024, 4.1.1). It is part of the external
+// part of the work and is not counted (5.3); in two-sided mode its back is an
+// empty page, so the title page still starts on a recto.
+#let cover-page(institution, course, author, date, two-sided) = {
+    cover-layout(institution, course, author, date)
+
+    if two-sided {
+        page[]
+    }
+}
+
+// The title page (folha de rosto, ABNT NBR 14724:2024, 4.2.1.1.1); page
+// counting starts here (5.3).
+#let title-page(institution, course, author, advisor, co-advisor, date, labels) = {
+    cover-layout(institution, course, author, date, start-counting: true, middle: nature-block(course, labels, body: {
+        blank-line-spacing
+        [#labels.advisor: #advisor.title #advisor.first-name #advisor.surname]
+
+        if co-advisor != none {
+            linebreak()
+            [#labels.co-advisor: #co-advisor.title #co-advisor.first-name #co-advisor.surname]
+        }
     }))
 }
 
