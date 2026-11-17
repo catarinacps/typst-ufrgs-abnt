@@ -7,6 +7,8 @@
 
 #let std-figure = figure
 
+#let caption-separator = [ -- ]
+
 #let figure(body,
     kind: auto,
     placement: none,
@@ -298,6 +300,13 @@
         // style (infufrgs.cls); ABNT NBR 14724, 5.2 would call for 1.5 here.
         set par(leading: single-spacing, spacing: single-spacing)
 
+        // ABNT NBR 14724:2024, 4.2.1.9-4.2.1.10: name and number, a dash,
+        // then the title, as in the captions ("Figure 2.1 – Title ... 16").
+        show outline.entry: it => link(
+            it.element.location(),
+            it.indented([#it.prefix()#caption-separator], it.inner(), gap: 0pt),
+        )
+
         context {
             if counter(std-figure.where(kind: image)).final().at(0) > 0 {
                 page(i-figured.outline(target-kind: image, title: labels.list-of-figures))
@@ -362,7 +371,7 @@
 
     set std-figure.caption(
         position: top,
-        separator: [ -- ]
+        separator: caption-separator
     )
     set std-figure(
         placement: auto,
