@@ -104,10 +104,12 @@
         O resumo do trabalho.
     ],
 
-    glossary: (
-        (key: "ABNT", short: "ABNT", long: "Associação Brasileira de Normas Técnicas"),
-        (key: "SBC", short: "SBC", long: "Sociedade Brasileira de Computação")
-    ),
+    // List of abbreviations and acronyms (lista de abreviaturas e siglas,
+    // ABNT NBR 14724:2024, 4.2.1.11), printed only when non-empty and sorted by
+    // `key`; entries are glossarium entries, used in the text as `@key`, e.g.
+    // `((key: "abnt", short: "ABNT", long: "Associação Brasileira de Normas
+    // Técnicas"),)`.
+    abbreviations: (),
 
     language: "en",
 
@@ -143,7 +145,7 @@
     body,
 ) = {
     show: make-glossary
-    register-glossary(glossary)
+    register-glossary(abbreviations)
 
     let labels = make-labels(language, labels)
 
@@ -321,7 +323,9 @@
             }
         }
 
-        glossary-page(glossary, labels)
+        if abbreviations.len() > 0 {
+            abbreviations-page(abbreviations, labels)
+        }
 
         // ABNT NBR 6027, 5.1-5.2: section numbers flush left, all titles
         // (post-textual ones included) aligned by the longest number; 6.2:

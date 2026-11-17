@@ -235,18 +235,18 @@
     #labels.keywords: #keywords.join("; ")\.
 ]
 
-#let print-glossary-title(entry) = {
+#let print-abbreviation(entry) = {
     let short = entry.at("short")
     let long = entry.at("long")
 
     box(width: 1fr, short); box(width: 4fr, long);
 }
 
-#let glossary-page(terms, labels) = page[
+#let abbreviations-page(terms, labels) = page[
     = #labels.list-of-abbreviations
 
     #{
         set strong(delta: 0)
-        print-glossary(terms, show-all: true, disable-back-references: true, user-print-title: print-glossary-title)
+        print-glossary(terms, show-all: true, disable-back-references: true, user-print-title: print-abbreviation)
     }
 ]

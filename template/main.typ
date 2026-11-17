@@ -5,7 +5,7 @@
     abstract: lorem(200),
     preset: ufrgs,
     course: ufrgs.courses.cic,
-    glossary: (
+    abbreviations: (
         (key: "abnt", short: "ABNT", long: "Associação Brasileira de Normas Técnicas"),
         (key: "sbc", short: "SBC", long: "Sociedade Brasileira de Computação")
     ),
