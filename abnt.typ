@@ -3,6 +3,7 @@
 #import "spacing.typ": *
 #import "pages.typ": *
 #import "presets.typ" as presets: *
+#import "labels.typ": default-labels, make-labels, localize
 
 #let std-figure = figure
 
@@ -30,7 +31,7 @@
                 box(std-figure(
                     inner.body,
                     kind: "nested",
-                    supplement: [Source],
+                    supplement: none,
                     numbering: none,
                     caption: std-figure.caption(source, position: bottom),
                     gap: gap
@@ -92,6 +93,10 @@
 
     language: "en",
 
+    // Overrides for the fixed texts of the document language, e.g.
+    // `(contents: [Table of Contents])`; see `labels.typ` for the keys.
+    labels: (:),
+
     date: datetime.today(),
 
     references: none,
@@ -103,7 +108,19 @@
     show: make-glossary
     register-glossary(glossary)
 
-    set document(title: title, author: author.first-name)
+    let labels = make-labels(language, labels)
+    let preset = localize(preset, language)
+    let course = localize(course, language)
+
+    // the document language decides which is the main title and which abstract comes first
+    // (ABNT NBR 14724:2024, 4.2.1.7-4.2.1.8).
+    let abstracts = (
+        en: (title: title, body: abstract, keywords: keywords),
+        pt: (title: titulo, body: resumo, keywords: palavras-chave),
+    )
+    let other-language = if language == "pt" { "en" } else { "pt" }
+
+    set document(title: abstracts.at(language).title, author: author.first-name)
 
     set page(
         paper: "a4",
@@ -149,23 +166,32 @@
     {
         // show heading: it => { it; par(box()); v(-0.25em) }
 
-        cover-page(preset, course, author, advisor, co-advisor, date)
+        cover-page(preset, course, author, advisor, co-advisor, date, labels)
 
-        blank-page()
+        blank-page(labels)
 
         nominata-page(preset, course)
 
         if acknowledgements != none {
-            acknowledgements-page(acknowledgements)
+            acknowledgements-page(acknowledgements, labels)
         }
 
         if epigraph != none {
             epigraph-page(epigraph.quote, epigraph.author)
         }
 
-        abstract-page(abstract, keywords)
-
-        resumo-page(resumo, palavras-chave, title: titulo)
+        // The vernacular abstract first, then the foreign one under its
+        // translated title.
+        for lang in (language, other-language) {
+            let a = abstracts.at(lang)
+            abstract-page(
+                a.body,
+                a.keywords,
+                language: lang,
+                labels: if lang == language { labels } else { default-labels.at(lang) },
+                title: if lang != language { a.title },
+            )
+        }
 
         // Lists and the summary are single-spaced, following the INF house
         // style (infufrgs.cls); ABNT NBR 14724, 5.2 would call for 1.5 here.
@@ -173,19 +199,19 @@
 
         context {
             if counter(std-figure.where(kind: image)).final().at(0) > 0 {
-                page(i-figured.outline(target-kind: image, title: [List of Figures]))
+                page(i-figured.outline(target-kind: image, title: labels.list-of-figures))
             }
 
             if counter(std-figure.where(kind: table)).final().at(0) > 0 {
-                page(i-figured.outline(target-kind: table, title: [List of Tables]))
+                page(i-figured.outline(target-kind: table, title: labels.list-of-tables))
             }
 
             if counter(std-figure.where(kind: raw)).final().at(0) > 0 {
-                page(i-figured.outline(target-kind: raw, title: [List of Listings]))
+                page(i-figured.outline(target-kind: raw, title: labels.list-of-listings))
             }
         }
 
-        glossary-page(glossary)
+        glossary-page(glossary, labels)
 
         // ABNT NBR 6027, 5.1-5.2: section numbers flush left, all titles
         // (post-textual ones included) aligned by the longest number; 6.2:
@@ -212,7 +238,7 @@
         // ABNT NBR 6027, 4.1 b: the summary starts on a recto page.
         if two-sided { pagebreak(to: "odd", weak: true) }
 
-        outline(title: [Summary])
+        outline(title: labels.contents)
     }
 
     // ABNT NBR 14724, 5.2.2: primary sections start on a new page, on a recto
@@ -243,7 +269,7 @@
     show std-figure.caption.where(position: bottom): it => {
         set align(start)
         set par(first-line-indent: 0pt)
-        [#it.supplement: #it.body]
+        [#labels.source: #it.body]
     }
 
     set enum(
@@ -310,10 +336,11 @@
 
     set heading(numbering: "1.1", outlined: true)
 
-    show heading.where(level: 1): set heading(supplement: [Chapter])
-    show heading.where(level: 3): set heading(supplement: [Subsection])
-    show heading.where(level: 4): set heading(supplement: [Subsubsection])
-    show heading.where(level: 5): set heading(supplement: [Paragraph])
+    show heading.where(level: 1): set heading(supplement: labels.chapter)
+    show heading.where(level: 2): set heading(supplement: labels.section)
+    show heading.where(level: 3): set heading(supplement: labels.subsection)
+    show heading.where(level: 4): set heading(supplement: labels.subsubsection)
+    show heading.where(level: 5): set heading(supplement: labels.paragraph)
 
     // ABNT NBR 14724, 5.3: top outer corner, 2cm from the top edge, the last
     // digit 2cm from the side edge (i.e. at the outer margin), smaller font.
@@ -338,6 +365,6 @@
     set par(justify: false, leading: single-spacing, spacing: double-spacing)
 
     if references != none {
-        bibliography(references, style: path("abnt-ufrgs.csl"), title: [References])
+        bibliography(references, style: path("abnt-ufrgs.csl"), title: labels.references)
     }
 }

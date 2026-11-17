@@ -1,10 +1,9 @@
 #import "@preview/glossarium:0.5.10": print-glossary
-#import "presets.typ": bachelors
 #import "spacing.typ": *
 
-#let blank-page() = page(align(center + bottom)[_Page intentionally left blank._])
+#let blank-page(labels) = page(align(center + bottom, emph(labels.blank-page)))
 
-#let cover-page(institution, course, author, advisor, co-advisor, date) = {
+#let cover-page(institution, course, author, advisor, co-advisor, date, labels) = {
     page(align(center, context {
         set align(top)
 
@@ -28,13 +27,13 @@
             set align(left)
             set text(size: 10pt)
 
-            bachelors(course.title, course.name)
+            (labels.bachelors-nature)(course.title, course.name)
             blank-line-spacing
-            [Advisor: #advisor.title #advisor.first-name #advisor.surname]
+            [#labels.advisor: #advisor.title #advisor.first-name #advisor.surname]
 
             if co-advisor != none {
                 linebreak()
-                [Co-advisor: #co-advisor.title #co-advisor.first-name #co-advisor.surname]
+                [#labels.co-advisor: #co-advisor.title #co-advisor.first-name #co-advisor.surname]
             }
         }))
 
@@ -47,8 +46,8 @@
     }))
 }
 
-#let acknowledgements-page(acknowledgements) = page[
-    = Acknowledgements
+#let acknowledgements-page(acknowledgements, labels) = page[
+    = #labels.acknowledgements
 
     #set par(first-line-indent: 3em, leading: normal-spacing, spacing: normal-spacing)
 
@@ -65,28 +64,22 @@
     #(institution.nominata + course.nominata).map(it => it.join([: ])).join(linebreak())
 ])
 
-#let abstract-page(abstract, keywords) = page[
-    = Abstract
+// An abstract with its keywords, typeset in `language`; `title` is printed
+// above it (the translated title, for the abstract in the foreign language).
+#let abstract-page(abstract, keywords, language: "en", labels: none, title: none) = page[
+    #set text(lang: language)
 
-    #par(leading: normal-spacing, abstract)
-
-    #v(1.5cm)
-
-    Keywords: #keywords.join("; ")\.
-]
-
-#let resumo-page(abstract, keywords, title: none) = page[
     #if title != none {
         align(center + top, strong(title))
     }
 
-    = Resumo
+    = #labels.abstract
 
     #par(leading: normal-spacing, abstract)
 
     #v(1.5cm)
 
-    Palavras-chave: #keywords.join("; ")\.
+    #labels.keywords: #keywords.join("; ")\.
 ]
 
 #let print-glossary-title(entry) = {
@@ -96,8 +89,8 @@
     box(width: 1fr, short); box(width: 4fr, long);
 }
 
-#let glossary-page(terms) = page[
-    = List of Abbreviations and Acronyms
+#let glossary-page(terms, labels) = page[
+    = #labels.list-of-abbreviations
 
     #{
         set strong(delta: 0)

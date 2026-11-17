@@ -1,8 +1,3 @@
-#let bachelors(title, course) = [
-    Monograph presented as a partial requirement
-    for the degree of #title in #course
-]
-
 #let inf-ufrgs = (
     name: [Instituto de Informática],
     department-ina: [Departamento de Informática Aplicada],
@@ -22,9 +17,14 @@
     ),
     courses: (
         cic: (
-            name: [Computer Science],
-            program: [Bachelor of Science in Computer Science],
-            title: [Bachelor],
+            // Translatable fields are (en: ..., pt: ...) dictionaries,
+            // resolved for the document language (see `localize`).
+            name: (en: [Computer Science], pt: [Ciência da Computação]),
+            program: (
+                en: [Bachelor of Science in Computer Science],
+                pt: [Curso de Ciência da Computação],
+            ),
+            title: (en: [Bachelor], pt: [Bacharel]),
             department: inf-ufrgs.name,
             nominata: (
                 inf-ufrgs.director,
