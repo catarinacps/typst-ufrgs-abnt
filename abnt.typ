@@ -121,6 +121,14 @@
 
     references: none,
 
+    // Glossary (glossário, ABNT NBR 14724:2024, 4.2.3.2), printed after the
+    // references only when non-empty, sorted alphabetically by the term
+    // (`short`) unless an entry sets its own `sort` string. Entries share
+    // glossarium's registry with `abbreviations` (keys must be unique across
+    // both), e.g. `((key: "cluster", short: "Cluster", description: [A set
+    // of ...]),)`; `@cluster` in the text prints the term.
+    glossary: (),
+
     // Post-textual elements, printed after the references in this order
     // (ABNT NBR 14724:2024, 4.2.3). Each primary section (`=`) in them is one
     // appendix/annex, titled "APPENDIX A — TITLE".
@@ -145,7 +153,7 @@
     body,
 ) = {
     show: make-glossary
-    register-glossary(abbreviations)
+    register-glossary(abbreviations + glossary)
 
     let labels = make-labels(language, labels)
 
@@ -491,6 +499,10 @@
         set par(justify: false, leading: single-spacing, spacing: double-spacing)
 
         bibliography(references, style: path("abnt-ufrgs.csl"), title: labels.references)
+    }
+
+    if glossary.len() > 0 {
+        glossary-section(glossary, labels)
     }
 
     let lettered-part(content, word) = {

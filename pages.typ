@@ -250,3 +250,52 @@
         print-glossary(terms, show-all: true, disable-back-references: true, user-print-title: print-abbreviation)
     }
 ]
+
+// Plain text of a string or content, for sorting.
+#let plain-text(it) = {
+    if type(it) == str {
+        it
+    } else if it.has("text") {
+        it.text
+    } else if it.has("children") {
+        it.children.map(plain-text).join()
+    } else if it.has("body") {
+        plain-text(it.body)
+    } else if it == [ ] {
+        " "
+    } else {
+        ""
+    }
+}
+
+// Alphabetical sort key: case- and accent-insensitive, so "árvore" sorts
+// between "Abelha" and "beta".
+#let alphabetical-key(it) = lower(plain-text(it).normalize(form: "nfd").replace(regex("\\p{M}"), ""))
+
+// The glossary (ABNT NBR 14724:2024, 4.2.3.2): a centered, unnumbered title
+// (5.2.3) listed in the summary, and one paragraph per term, "Term: definition"
+// with no hanging indent, spaced like the references (NBR 6023, 6.3).
+#let glossary-section(terms, labels) = {
+    let sort-keys = terms.map(t => (t.key, t.at("sort", default: alphabetical-key(t.short)))).to-dict()
+
+    heading(numbering: none, outlined: true, labels.glossary)
+
+    // glossarium wraps each entry in a figure; keep them in the text flow and
+    // flush left, out of the template's figure placement and centering.
+    set figure(placement: none)
+    show figure.where(kind: "glossarium_entry"): it => align(start, it.body)
+
+    set par(justify: false, leading: single-spacing, spacing: double-spacing, first-line-indent: 0pt)
+    print-glossary(
+        terms,
+        show-all: true,
+        disable-back-references: true,
+        entry-sortkey: e => sort-keys.at(e.key),
+        // glossarium's default entry has a hanging indent; print our own.
+        user-print-gloss: (e, ..args) => {
+            strong(e.short)
+            let description = e.at("description", default: none)
+            if description not in (none, "", []) [: #description]
+        },
+    )
+}
