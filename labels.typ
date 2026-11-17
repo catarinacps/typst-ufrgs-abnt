@@ -24,6 +24,8 @@
         paragraph: [Paragraph],
         advisor: [Advisor],
         co-advisor: [Co-advisor],
+        approved-on: [Approved on],
+        examining-committee: [Examining committee],
         blank-page: [Page intentionally left blank.],
         bachelors-nature: (title, course) => [
             Work presented in partial fulfillment
@@ -51,6 +53,8 @@
         paragraph: [Parágrafo],
         advisor: [Orientador],
         co-advisor: [Coorientador],
+        approved-on: [Aprovado em],
+        examining-committee: [Banca examinadora],
         blank-page: [Página intencionalmente deixada em branco.],
         bachelors-nature: (title, course) => [
             Monografia apresentada como requisito

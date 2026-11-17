@@ -1,7 +1,18 @@
 #import "@preview/glossarium:0.5.10": print-glossary
+#import "@preview/datify:1.3.0": custom-date-format
 #import "spacing.typ": *
 
 #let blank-page(labels) = page(align(center + bottom, emph(labels.blank-page)))
+
+// The nature of the work, aligned from the middle of the text area to the
+// right margin (ABNT NBR 14724:2024, 5.2); `body` follows it in the same block.
+#let nature-block(course, labels, body: none) = align(right, block(width: 50%, {
+    set align(left)
+    set text(size: 10pt)
+
+    (labels.bachelors-nature)(course.title, course.name)
+    body
+}))
 
 #let cover-page(institution, course, author, advisor, co-advisor, date, labels) = {
     page(align(center, context {
@@ -25,11 +36,7 @@
 
         v(1cm)
 
-        align(right, block(width: 50%, {
-            set align(left)
-            set text(size: 10pt)
-
-            (labels.bachelors-nature)(course.title, course.name)
+        nature-block(course, labels, body: {
             blank-line-spacing
             [#labels.advisor: #advisor.title #advisor.first-name #advisor.surname]
 
@@ -37,7 +44,7 @@
                 linebreak()
                 [#labels.co-advisor: #co-advisor.title #co-advisor.first-name #co-advisor.surname]
             }
-        }))
+        })
 
         set align(bottom)
 
@@ -65,6 +72,64 @@
     #upper(institution.name)\
     #(institution.nominata + course.nominata).map(it => it.join([: ])).join(linebreak())
 ])
+
+// The approval sheet (folha de aprovação, ABNT NBR 14724:2024, 4.2.1.3), with
+// no title (5.2.4). `approval` is either content (a scanned signed sheet,
+// placed full-page) or a dictionary with the approval `date` (`none` leaves a
+// line to fill in by hand) and the examining `committee` (`author(...)`s).
+#let approval-page(approval, author, course, language, labels) = {
+    if type(approval) == content {
+        return page(margin: 0pt, {
+            set image(width: 100%, height: 100%, fit: "contain")
+            align(center + horizon, approval)
+        })
+    }
+
+    page(context {
+        set text(hyphenate: false)
+        set par(justify: false)
+        set align(center)
+
+        upper[#author.first-name #author.surname]
+
+        v(2cm)
+
+        text(size: 14pt, strong(document.title))
+
+        v(1cm)
+
+        nature-block(course, labels)
+
+        v(1cm)
+
+        let date = approval.at("date", default: none)
+        [#labels.approved-on: ]
+        if date == none {
+            box(width: 4cm, stroke: (bottom: 0.5pt))
+        } else {
+            custom-date-format(date, pattern: "long", lang: language)
+        }
+
+        v(1fr)
+
+        strong(upper(labels.examining-committee))
+
+        for member in approval.committee {
+            block(breakable: false, above: 1.5cm, {
+                line(length: 9cm, stroke: 0.5pt)
+                (member.at("title", default: none), member.first-name, member.surname)
+                    .filter(it => it != none)
+                    .join(" ")
+                if member.at("institution", default: none) != none {
+                    linebreak()
+                    member.institution
+                }
+            })
+        }
+
+        v(1fr)
+    })
+}
 
 // An abstract with its keywords, typeset in `language`; `title` is printed
 // above it (the translated title, for the abstract in the foreign language).

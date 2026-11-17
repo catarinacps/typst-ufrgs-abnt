@@ -63,8 +63,8 @@
     (post-textual-letter(n.first()), ..n.slice(1).map(str)).join(".")
 }
 
-#let author(surname, first-name, title: none) = {
-    (surname: surname, first-name: first-name, title: title)
+#let author(surname, first-name, title: none, institution: none) = {
+    (surname: surname, first-name: first-name, title: title, institution: institution)
 }
 
 #let epigraph(quote, author) = {
@@ -124,6 +124,12 @@
 
     annexes: none,
 
+    // Approval sheet (ABNT NBR 14724:2024, 4.2.1.3), printed after the
+    // nominata: `none`, a dictionary `(date: datetime(...) or none,
+    // committee: (author(..., institution: [...]), ...))` to typeset it, or
+    // content such as `image("approval.pdf")` to place a scanned signed sheet.
+    approval: none,
+
     two-sided: true,
 
     body,
@@ -132,6 +138,41 @@
     register-glossary(glossary)
 
     let labels = make-labels(language, labels)
+
+    if approval != none {
+        assert(
+            type(approval) in (dictionary, content),
+            message: "typst-ufrgs-abnt: `approval` must be none, a dictionary (date, committee) "
+                + "or content (a scanned sheet), got " + str(type(approval)),
+        )
+        if type(approval) == dictionary {
+            let unknown = approval.keys().filter(k => k not in ("date", "committee"))
+            assert(
+                unknown.len() == 0,
+                message: "typst-ufrgs-abnt: unknown approval keys: " + unknown.join(", "),
+            )
+            assert(
+                type(approval.at("date", default: none)) in (type(none), datetime),
+                message: "typst-ufrgs-abnt: `approval.date` must be a datetime or none",
+            )
+            let committee = approval.at("committee", default: none)
+            assert(
+                type(committee) == array,
+                message: "typst-ufrgs-abnt: `approval.committee` must be an array of author(...) "
+                    + "(a single member needs a trailing comma: `(author(...),)`)",
+            )
+            assert(
+                committee.len() > 0,
+                message: "typst-ufrgs-abnt: `approval.committee` must list at least one member",
+            )
+            for member in committee {
+                assert(
+                    type(member) == dictionary and "surname" in member and "first-name" in member,
+                    message: "typst-ufrgs-abnt: committee members must be author(...), got " + repr(member),
+                )
+            }
+        }
+    }
     let preset = localize(preset, language)
     let course = localize(course, language)
 
@@ -206,6 +247,10 @@
         blank-page(labels)
 
         nominata-page(preset, course)
+
+        if approval != none {
+            approval-page(approval, author, course, language, labels)
+        }
 
         if acknowledgements != none {
             acknowledgements-page(acknowledgements, labels)
