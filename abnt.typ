@@ -386,7 +386,6 @@
         separator: caption-separator
     )
     set std-figure(
-        placement: auto,
         numbering: "1.1",
         gap: 0.5em
     )
