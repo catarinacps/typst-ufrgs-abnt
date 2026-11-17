@@ -88,7 +88,7 @@
 
 #let epigraph-page(quote, author) = page(align(right + bottom)[
     _#quote _\
-    -- #author
+    -- #smallcaps(author)
 ])
 
 // The nominata, at the bottom of the back of the title page. The top of the
