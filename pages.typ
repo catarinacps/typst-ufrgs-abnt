@@ -5,6 +5,8 @@
 
 #let cover-page(institution, course, author, advisor, co-advisor, date, labels) = {
     page(align(center, context {
+        set text(hyphenate: false)
+        set par(justify: false)
         set align(top)
 
         upper()[
