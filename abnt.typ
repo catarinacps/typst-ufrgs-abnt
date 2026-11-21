@@ -65,6 +65,31 @@
     (post-textual-letter(n.first()), ..n.slice(1).map(str)).join(".")
 }
 
+// Splits bold bibliography content at its first ": ", returning
+// (title, subtitle), or `none` when there is no subtitle. Recurses into
+// sequences so titles with inline formatting are split too.
+#let split-subtitle(body) = {
+    if body.func() == text {
+        let m = body.text.match(": ")
+        if m != none {
+            return (body.text.slice(0, m.start), body.text.slice(m.start))
+        }
+    } else if body.has("children") {
+        let children = body.children
+        for (i, child) in children.enumerate() {
+            let parts = split-subtitle(child)
+            if parts != none {
+                let (head, tail) = parts
+                return (
+                    children.slice(0, i).join() + head,
+                    tail + children.slice(i + 1).join(),
+                )
+            }
+        }
+    }
+    none
+}
+
 #let author(surname, first-name, title: none, institution: none) = {
     (surname: surname, first-name: first-name, title: title, institution: institution)
 }
@@ -496,6 +521,18 @@
         // ABNT NBR 6023, 6.3: single spacing, aligned to the left margin,
         // entries separated by a blank single-spaced line.
         set par(justify: false, leading: single-spacing, spacing: double-spacing)
+
+        // ABNT NBR 6023, 6.7 and 8.2: only the title is highlighted, and its
+        // subtitle follows after a colon. Hayagriva drops BibLaTeX `subtitle`
+        // (src/interop.rs, "Ignoring subtitle and titleaddon for now"), so the
+        // subtitle must be written in `title`, and the CSL bolds both; split
+        // the bold title at its first colon here instead. This also unbolds
+        // the part after a colon in any other bold element (e.g. journals).
+        show strong: it => {
+            let parts = split-subtitle(it.body)
+            if parts == none { return it }
+            strong(parts.first()) + parts.last()
+        }
 
         bibliography(references, style: path("abnt-ufrgs.csl"), title: labels.references)
     }
