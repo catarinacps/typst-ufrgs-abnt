@@ -285,7 +285,7 @@
     set figure(placement: none)
     show figure.where(kind: "glossarium_entry"): it => align(start, it.body)
 
-    set par(justify: false, leading: single-spacing, spacing: double-spacing, first-line-indent: 0pt)
+    set par(justify: true, leading: single-spacing, spacing: double-spacing, first-line-indent: 0pt)
     print-glossary(
         terms,
         show-all: true,
