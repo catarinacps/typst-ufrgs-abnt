@@ -18,9 +18,17 @@
     gap: 0.5em,
     outlined: true,
     source: none) = {
+        // placement: "page" puts the figure on a page of its own, centered
+        // vertically, like LaTeX's [p] floats. It becomes a top float marked
+        // with scope: "parent" (no visible effect in a single-column
+        // document), which the figure rules in `abnt` pick up.
+        let own-page = placement == "page"
+        let scope = if own-page { "parent" } else { "column" }
+        let placement = if own-page { top } else { placement }
         let inner = std-figure(
             body,
             placement: placement,
+            scope: scope,
             caption: caption,
             kind: kind,
             supplement: supplement,
@@ -41,6 +49,7 @@
                 caption: std-figure.caption(inner.caption.body, position: top),
                 kind: inner.kind,
                 placement: placement,
+                scope: scope,
                 numbering: numbering,
                 outlined: outlined,
                 supplement: supplement,
@@ -237,13 +246,18 @@
 
     set document(title: abstracts.at(language).title, author: author.first-name)
 
+    let page-margin = if two-sided {
+        (inside: 3cm, outside: 2cm, top: 3cm, bottom: 2cm)
+    } else {
+        (left: 3cm, top: 3cm, right: 2cm, bottom: 2cm)
+    }
+    // Size of the text area, for figures placed on a page of their own.
+    let margin-y = page-margin.top + page-margin.bottom
+    let margin-x = page-margin.values().sum() - margin-y
+
     set page(
         paper: "a4",
-        margin: if two-sided {
-            (inside: 3cm, outside: 2cm, top: 3cm, bottom: 2cm)
-        } else {
-            (left: 3cm, top: 3cm, right: 2cm, bottom: 2cm)
-        } ,
+        margin: page-margin,
         header-ascent: 1cm,
         footer-descent: 1cm,
     )
@@ -419,6 +433,26 @@
     // and tables in a smaller font and single spacing.
     show std-figure.caption: set text(size: 10pt)
     show std-figure.caption: set par(leading: single-spacing, spacing: single-spacing)
+
+    // Figures with placement: "page" (top floats marked with scope: "parent",
+    // see `figure`): a clearance no page can hold keeps text off their page,
+    // and they are centered vertically in the text area, as LaTeX does with
+    // float pages. Their height is measured as if they were in the flow.
+    show std-figure.where(placement: top, scope: "parent"): it => context {
+        let width = page.width - margin-x
+        let height = page.height - margin-y
+        let in-flow = std-figure(
+            it.body,
+            caption: it.caption,
+            kind: it.kind,
+            supplement: it.supplement,
+            numbering: it.numbering,
+            gap: it.gap,
+            outlined: false)
+        let figure-height = measure(in-flow, width: width).height
+        set place(clearance: 100cm, dy: calc.max(0pt, (height - figure-height) / 2))
+        it
+    }
 
     show std-figure.caption.where(position: bottom): it => {
         set align(start)
