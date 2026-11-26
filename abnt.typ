@@ -9,6 +9,48 @@
 
 #let caption-separator = [ -- ]
 
+// Typst locates a float where it is written, not on the page where it lands
+// when it is deferred (e.g. a top float that does not fit and moves to the
+// next page), so the lists of figures would print, and link to, the wrong
+// page, and references would link to the wrong place. This is a known Typst
+// bug: https://github.com/typst/typst/issues/4359 (open as of Typst 0.15.1);
+// once it is fixed, this workaround can go. `figure` puts a marker in the
+// figure's body, which is laid out where the float lands, and
+// `landed-location` finds it for outline entries and references.
+//
+// The marker is keyed by the figure's caption: in document order, deferred
+// floats come after whatever was laid out before them (e.g. the anchors of
+// the next figures), so a marker cannot be told apart by its position. Its
+// kind is not known yet when `figure` is called (kind: auto). Figures with
+// identical captions would share the first one's page.
+//
+// Captions are compared as plain text: once laid out, a caption's content
+// gains resolved fields (in refs, raw text, ...), so its repr no longer
+// matches the one written in the document.
+#let plain-text(it) = {
+    if type(it) == str { return it }
+    if type(it) != content { return "" }
+    if it.func() == smartquote { return if it.double { "\"" } else { "'" } }
+    if it.func() == ref { return str(it.target) }
+    if it.func() in ([ ].func(), linebreak) { return " " }
+    if it.has("text") { return plain-text(it.text) }
+    if it.has("children") { return it.children.map(plain-text).join() }
+    if it.has("body") { return plain-text(it.body) }
+    if it.has("child") { return plain-text(it.child) }
+    ""
+}
+#let landed-key(caption) = ("abnt-figure-landed", plain-text(caption))
+#let landed-marker(caption) = metadata(landed-key(caption))
+
+// The location of the marker of `element` (a figure, possibly rebuilt by
+// i-figured), or the figure's own location when there is none (e.g. a figure
+// made with std-figure). Needs context.
+#let landed-location(element) = {
+    let caption = if element.caption != none { element.caption.body }
+    let found = query(metadata.where(value: landed-key(caption)))
+    if found.len() > 0 { found.first().location() } else { element.location() }
+}
+
 #let figure(body,
     kind: auto,
     placement: none,
@@ -26,7 +68,7 @@
         let scope = if own-page { "parent" } else { "column" }
         let placement = if own-page { top } else { placement }
         let inner = std-figure(
-            body,
+            { landed-marker(caption); body },
             placement: placement,
             scope: scope,
             caption: caption,
@@ -351,10 +393,25 @@
 
         // ABNT NBR 14724:2024, 4.2.1.9-4.2.1.10: name and number, a dash,
         // then the title, as in the captions ("Figure 2.1 – Title ... 16").
-        show outline.entry: it => link(
-            it.element.location(),
-            it.indented([#it.prefix()#caption-separator], it.inner(), gap: 0pt),
-        )
+        // The page is the one where the figure landed (see `landed-location`);
+        // otherwise this is what it.inner() lays out.
+        show outline.entry: it => context {
+            let loc = landed-location(it.element)
+            // The page numbers in the header are not set with
+            // `set page(numbering: ..)`, so there is no style to read here;
+            // like `it.page()`, fall back to Arabic numerals.
+            let style = loc.page-numbering()
+            let page-number = numbering(
+                if style == none { "1" } else { style },
+                ..counter(page).at(loc))
+            link(
+                loc,
+                it.indented(
+                    [#it.prefix()#caption-separator],
+                    [#it.body() #box(width: 1fr, it.fill) #page-number],
+                    gap: 0pt),
+            )
+        }
 
         context {
             if counter(std-figure.where(kind: image)).final().at(0) > 0 {
@@ -419,6 +476,23 @@
 
     show heading: i-figured.reset-counters
     show std-figure: i-figured.show-figure
+
+    // References to floating figures link to where the figure landed (see
+    // `landed-location`), not to where it is written. The reference is
+    // rebuilt as Typst would print it: supplement, a non-breaking space and
+    // the number.
+    show ref: it => {
+        let el = it.element
+        if (el == none or el.func() != std-figure or el.placement == none
+            or el.numbering == none or it.form != "normal") { return it }
+        context {
+            let number = numbering(el.numbering, ..el.counter.at(el.location()))
+            let supplement = if it.supplement == auto { el.supplement } else { it.supplement }
+            if type(supplement) == function { supplement = supplement(el) }
+            if supplement not in (none, []) { supplement += [~] }
+            link(landed-location(el), supplement + number)
+        }
+    }
 
     set std-figure.caption(
         position: top,
